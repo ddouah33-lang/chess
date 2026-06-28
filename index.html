@@ -1,62 +1,69 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Safae's Tulip Royale Chess</title>
+    <title>Safae's Royal Tulip & Cat Chess</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <!-- ÉCRAN CINÉMATIQUE D'ENTRÉE (INTRO) -->
+    <!-- MAGICAL INTRO CINEMATIC -->
     <div id="introOverlay" class="intro-overlay">
         <div class="intro-content">
-            <div class="intro-tulips">
-                <span class="intro-tulip animated-tulip-left">🌷</span>
-                <span class="intro-tulip main-tulip">🌷</span>
-                <span class="intro-tulip animated-tulip-right">🌷</span>
+            <div class="intro-icons">
+                <span class="intro-icon animated-left">🌷</span>
+                <span class="intro-icon main-icon">🐾</span>
+                <span class="intro-icon animated-right">🌷</span>
             </div>
-            <h1 class="intro-title">Salut Safae ✨</h1>
-            <p class="intro-subtitle">Bienvenue dans ton royaume de jeu...</p>
+            <h1 class="intro-title">Welcome Safae ✨</h1>
+            <p class="intro-subtitle">Step into your Tulip & Meow Kingdom...</p>
             <div class="intro-glow"></div>
         </div>
     </div>
 
-    <!-- LE JEU PRINCIPAL -->
+    <!-- AUDIO STREAM (LOFI CAT HYMN) -->
+    <iframe id="youtubeAudio" src="https://www.youtube.com/embed/yyeguLLb8Gc?enablejsapi=1&autoplay=1&mute=1&loop=1&playlist=yyeguLLb8Gc" allow="autoplay"></iframe>
+
     <div class="bg-glow"></div>
 
     <div class="app-container">
-        <!-- PANNEAU DE CONTRÔLE -->
+        <!-- LEFT CONTROL PANEL -->
         <div class="control-panel">
             <div class="branding">
-                <h1>Safae's Tulip</h1>
-                <p class="subtitle">Chocolat & Pink Prémium 🌷</p>
+                <h1>Safae's Kingdom</h1>
+                <p class="subtitle">Chocolate, Pink, Tulips & Cats 🌷🐾</p>
             </div>
+
+            <!-- MUSIC CONTROLLER BUTTON -->
+            <button class="music-toggle-btn" onclick="toggleMusic()" id="musicBtn">
+                🎵 Play Lofi Music 🐾
+            </button>
 
             <div class="status-box">
                 <div class="turn-status" id="turnIndicator">
-                    C'est à Safae de jouer 🌷
+                    It's Safae's turn to play 🌷
                 </div>
-                <div class="ai-status" id="aiStatus">L'IA prépare sa stratégie...</div>
+                <div class="ai-status" id="aiStatus">The Meow-AI is scheming...</div>
             </div>
 
-            <!-- Pièces capturées -->
+            <!-- Captured Pieces -->
             <div class="captured-box">
                 <div class="captured-row">
-                    <span class="label">IA :</span>
+                    <span class="label">Captured by AI:</span>
                     <div id="capturedByBlack" class="captured-pieces"></div>
                 </div>
                 <div class="captured-row">
-                    <span class="label">Safae :</span>
+                    <span class="label">Captured by Safae:</span>
                     <div id="capturedByWhite" class="captured-pieces"></div>
                 </div>
             </div>
 
-            <button class="btn-primary" onclick="resetGame()">Nouvelle Partie ✨</button>
+            <button class="btn-primary" onclick="resetGame()">New Match ✨</button>
         </div>
 
-        <!-- ZONE DE JEU -->
+        <!-- MAIN GAMEPLAY BOARD -->
         <div class="board-wrapper">
             <div class="letters-row"><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span></div>
             
@@ -69,9 +76,9 @@
             <div class="letters-row"><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span></div>
         </div>
 
-        <!-- PANNEAU HISTORIQUE -->
+        <!-- RIGHT TIMELINE PANEL -->
         <div class="history-panel">
-            <h3>🌷 Chronologie Safae</h3>
+            <h3>🐾 Safae's Logs</h3>
             <div class="moves-list" id="movesList"></div>
         </div>
     </div>

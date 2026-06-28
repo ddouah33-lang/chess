@@ -1,14 +1,53 @@
-// GESTION DE LA CINÉMATIQUE D'OUVERTURE
+// MAGICAL INTRO TIMING LOADER & AUTO-PLAY UNLOCKER
+let musicPlaying = false;
+
 window.addEventListener('DOMContentLoaded', () => {
     const overlay = document.getElementById('introOverlay');
     
-    // Garde l'écran de bienvenue magique pendant 3.5 secondes puis l'efface avec style
+    // Smooth fade out for the cinematic screen
     setTimeout(() => {
         overlay.classList.add('fade-out');
     }, 3500);
+
+    // AUTO-PLAY FIX: Unlocks audio as soon as Safae interacts anywhere on the board
+    document.addEventListener('click', () => {
+        if (!musicPlaying) {
+            startMusic();
+        }
+    }, { once: true });
 });
 
-// ÉTAT DU PLATEAU ET SYSTÈME DE JEU
+function startMusic() {
+    const iframe = document.getElementById('youtubeAudio');
+    const btn = document.getElementById('musicBtn');
+    if (!iframe) return;
+    
+    iframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+    iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+    btn.innerText = "⏸ Mute Lofi Music 🐾";
+    musicPlaying = true;
+}
+
+function stopMusic() {
+    const iframe = document.getElementById('youtubeAudio');
+    const btn = document.getElementById('musicBtn');
+    if (!iframe) return;
+    
+    iframe.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
+    iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+    btn.innerText = "🎵 Play Lofi Music 🐾";
+    musicPlaying = false;
+}
+
+function toggleMusic() {
+    if (!musicPlaying) {
+        startMusic();
+    } else {
+        stopMusic();
+    }
+}
+
+// REAL CHESS RULES & MATRIX DATA STRUCTURE
 let boardState = [
     ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜'], 
     ['♟', '♟', '♟', '♟', '♟', '♟', '♟', '♟'],
@@ -21,8 +60,9 @@ let boardState = [
 ];
 
 let selectedSquare = null;
-let currentTurn = 'w'; // 'w' pour Safae, 'b' pour IA
+let currentTurn = 'w'; // 'w' = Safae (Pink), 'b' = Cat-AI (Chocolate)
 let moveCounter = 1;
+let legalMovesCache = [];
 
 const boardElement = document.getElementById('board');
 const turnIndicator = document.getElementById('turnIndicator');
@@ -36,6 +76,7 @@ function getPieceColor(symbol) {
     return ['♙', '♖', '♘', '♗', '♕', '♔'].includes(symbol) ? 'w' : 'b';
 }
 
+// INITIALIZE BOARD VIEWPORT
 function initBoard() {
     boardElement.innerHTML = '';
     for (let r = 0; r < 8; r++) {
@@ -51,6 +92,11 @@ function initBoard() {
                 piece.className = `piece ${getPieceColor(symbol)}`;
                 piece.innerText = symbol;
                 square.appendChild(piece);
+            }
+
+            // Check if this cell is calculated as a valid destination path
+            if (legalMovesCache.some(m => m.r === r && m.c === c)) {
+                square.classList.add('legal-dot');
             }
 
             square.addEventListener('click', () => onSquareClick(r, c));
@@ -69,23 +115,32 @@ function onSquareClick(r, c) {
         const fromR = selectedSquare.row;
         const fromC = selectedSquare.col;
 
+        // Clicking the same cell cancels selection
         if (fromR === r && fromC === c) {
             clearSelection();
             return;
         }
 
+        // Switching piece choice to another White/Pink tile
         if (color === 'w') {
             highlightSquare(r, c);
             return;
         }
 
+        // ACCURATE LEGAL VALIDATION STRUCT
+        const isMoveLegal = legalMovesCache.some(m => m.r === r && m.c === c);
+        if (!isMoveLegal) {
+            clearSelection();
+            return; 
+        }
+
         executeMove(fromR, fromC, r, c);
         
         currentTurn = 'b';
-        turnIndicator.innerText = "L'IA compose... 🧠";
-        aiStatus.innerText = "Recherche d'un coup face à Safae...";
+        turnIndicator.innerText = "Meow-AI is crafting... 🧠🐾";
+        aiStatus.innerText = "Looking for a counter-attack...";
         
-        setTimeout(makeAIMove, 800);
+        setTimeout(makeAIMove, 900);
     } else {
         if (color === 'w') {
             highlightSquare(r, c);
@@ -94,15 +149,96 @@ function onSquareClick(r, c) {
 }
 
 function highlightSquare(r, c) {
-    clearSelection();
     selectedSquare = { row: r, col: c };
+    legalMovesCache = calculateLegalMoves(r, c);
+    initBoard(); 
+
     const index = r * 8 + c;
     boardElement.children[index].classList.add('selected');
 }
 
 function clearSelection() {
     selectedSquare = null;
-    document.querySelectorAll('.square').forEach(s => s.classList.remove('selected'));
+    legalMovesCache = [];
+    initBoard();
+}
+
+// REAL PIECE PATH PLANNING & LEGALITY CALCULATION MATRIX
+function calculateLegalMoves(r, c) {
+    const piece = boardState[r][c];
+    let paths = [];
+    if (!piece) return paths;
+
+    const myColor = getPieceColor(piece);
+
+    // PAWNS RULE ENGINE
+    if (piece === '♙' || piece === '♟') {
+        const dir = (myColor === 'w') ? -1 : 1;
+        // Step forward
+        if (r + dir >= 0 && r + dir < 8 && boardState[r + dir][c] === '') {
+            paths.push({ r: r + dir, c: c, weight: 1 });
+            // Double step on start lines
+            const startRow = (myColor === 'w') ? 6 : 1;
+            if (r === startRow && boardState[r + (dir * 2)][c] === '') {
+                paths.push({ r: r + (dir * 2), c: c, weight: 2 });
+            }
+        }
+        // Diagonal attacks
+        const attackCols = [c - 1, c + 1];
+        attackCols.forEach(ac => {
+            if (ac >= 0 && ac < 8 && r + dir >= 0 && r + dir < 8) {
+                const target = boardState[r + dir][ac];
+                if (target && getPieceColor(target) !== myColor) {
+                    paths.push({ r: r + dir, c: ac, weight: 15 });
+                }
+            }
+        });
+    }
+
+    // KNIGHTS RULE ENGINE (L-Shape Vectors)
+    if (piece === '♙' === false && (piece === '♞' || piece === '♘')) {
+        const offsets = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+        offsets.forEach(o => {
+            const nr = r + o[0], nc = c + o[1];
+            if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+                const target = boardState[nr][nc];
+                if (target === '' || getPieceColor(target) !== myColor) {
+                    paths.push({ r: nr, c: nc, weight: target ? 12 : 2 });
+                }
+            }
+        });
+    }
+
+    // SLIDING PIECES (Rooks, Bishops, Queens, Kings Directions Engine)
+    let directions = [];
+    let infinite = true;
+
+    if (piece === '♖' || piece === '♜') directions = [[1,0],[-1,0],[0,1],[0,-1]];
+    if (piece === '♗' || piece === '♝') directions = [[1,1],[1,-1],[-1,1],[-1,-1]];
+    if (piece === '♕' || piece === '♛') directions = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+    if (piece === '♔' || piece === '♚') {
+        directions = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+        infinite = false;
+    }
+
+    directions.forEach(d => {
+        let nr = r + d[0], nc = c + d[1];
+        while (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+            const target = boardState[nr][nc];
+            if (target === '') {
+                paths.push({ r: nr, c: nc, weight: 1 });
+            } else {
+                if (getPieceColor(target) !== myColor) {
+                    paths.push({ r: nr, c: nc, weight: 20 });
+                }
+                break; 
+            }
+            if (!infinite) break;
+            nr += d[0]; nc += d[1];
+        }
+    });
+
+    return paths;
 }
 
 function executeMove(fromR, fromC, toR, toC) {
@@ -123,7 +259,8 @@ function executeMove(fromR, fromC, toR, toC) {
     boardState[fromR][fromC] = '';
     
     logMove(piece, fromR, fromC, toR, toC);
-    clearSelection();
+    selectedSquare = null;
+    legalMovesCache = [];
     initBoard();
 }
 
@@ -142,72 +279,43 @@ function logMove(piece, fR, fC, tR, tC) {
     } else {
         const rowDiv = document.getElementById(`move-${moveCounter}`);
         if (rowDiv) {
-            rowDiv.querySelector('.ai-part').innerText = `IA: ${moveText}`;
+            rowDiv.querySelector('.ai-part').innerText = `AI: ${moveText}`;
         }
         moveCounter++;
     }
 }
 
+// INTELLIGENT AI TURN ENGINE
 function makeAIMove() {
-    let allMoves = [];
+    let allAIValidMoves = [];
 
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
             if (getPieceColor(boardState[r][c]) === 'b') {
-                const moves = getPseudoLegalMoves(r, c);
-                moves.forEach(m => {
-                    allMoves.push({ fromR: r, fromC: c, toR: m.r, toC: m.c, weight: m.weight });
+                const partials = calculateLegalMoves(r, c);
+                partials.forEach(m => {
+                    allAIValidMoves.push({ fromR: r, fromC: c, toR: m.r, toC: m.c, weight: m.weight });
                 });
             }
         }
     }
 
-    if (allMoves.length === 0) {
-        turnIndicator.innerText = "Fin de partie 🌷";
-        aiStatus.innerText = "Plus aucun mouvement.";
+    if (allAIValidMoves.length === 0) {
+        turnIndicator.innerText = "Checkmate or Draw 🌷";
+        aiStatus.innerText = "Match concluded cleanly.";
         return;
     }
 
-    allMoves.sort((a, b) => b.weight - a.weight);
-    const maxWeight = allMoves[0].weight;
-    const bestMoves = allMoves.filter(m => m.weight === maxWeight);
-    const chosenMove = bestMoves[Math.floor(Math.random() * bestMoves.length)];
+    allAIValidMoves.sort((a, b) => b.weight - a.weight);
+    const maxWeight = allAIValidMoves[0].weight;
+    const bestOptions = allAIValidMoves.filter(m => m.weight === maxWeight);
+    const selectedAIMove = bestOptions[Math.floor(Math.random() * bestOptions.length)];
 
-    executeMove(chosenMove.fromR, chosenMove.fromC, chosenMove.toR, chosenMove.toC);
+    executeMove(selectedAIMove.fromR, selectedAIMove.fromC, selectedAIMove.toR, selectedAIMove.toC);
 
     currentTurn = 'w';
-    turnIndicator.innerText = "C'est à Safae de jouer 🌷";
-    aiStatus.innerText = "L'IA attend le coup de Safae...";
-}
-
-function getPseudoLegalMoves(r, c) {
-    const piece = boardState[r][c];
-    let targets = [];
-
-    if (piece === '♟') {
-        if (r + 1 < 8 && boardState[r + 1][c] === '') targets.push({ r: r + 1, c: c, weight: 1 });
-        if (r + 1 < 8 && c - 1 >= 0 && getPieceColor(boardState[r + 1][c - 1]) === 'w') targets.push({ r: r + 1, c: c - 1, weight: 12 });
-        if (r + 1 < 8 && c + 1 < 8 && getPieceColor(boardState[r + 1][c + 1]) === 'w') targets.push({ r: r + 1, c: c + 1, weight: 12 });
-    } 
-    else {
-        const directions = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]];
-        directions.forEach(d => {
-            let nextR = r + d[0];
-            let nextC = c + d[1];
-            if (nextR >= 0 && nextR < 8 && nextC >= 0 && nextC < 8) {
-                const targetPiece = boardState[nextR][nextC];
-                if (targetPiece === '') {
-                    targets.push({ r: nextR, c: nextC, weight: 1 });
-                } else if (getPieceColor(targetPiece) === 'w') {
-                    let weight = 6;
-                    if (targetPiece === '♕') weight = 30;
-                    if (targetPiece === '♖') weight = 18;
-                    targets.push({ r: nextR, c: nextC, weight: weight });
-                }
-            }
-        });
-    }
-    return targets;
+    turnIndicator.innerText = "It's Safae's turn to play 🌷";
+    aiStatus.innerText = "The Meow-AI is waiting for Safae...";
 }
 
 function resetGame() {
@@ -222,13 +330,14 @@ function resetGame() {
         ['♖', '♘', '♗', '♕', '♔', '♗', '♘', '♖']
     ];
     selectedSquare = null;
+    legalMovesCache = [];
     currentTurn = 'w';
     moveCounter = 1;
     movesList.innerHTML = '';
     capWhite.innerHTML = '';
     capBlack.innerHTML = '';
-    turnIndicator.innerText = "C'est à Safae de jouer 🌷";
-    aiStatus.innerText = "L'IA attend le coup de Safae...";
+    turnIndicator.innerText = "It's Safae's turn to play 🌷";
+    aiStatus.innerText = "The Meow-AI is waiting for Safae...";
     initBoard();
 }
 
