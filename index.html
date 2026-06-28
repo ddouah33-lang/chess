@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Safae's Tulip Royale Chess</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- ÉCRAN CINÉMATIQUE D'ENTRÉE (INTRO) -->
+    <div id="introOverlay" class="intro-overlay">
+        <div class="intro-content">
+            <div class="intro-tulips">
+                <span class="intro-tulip animated-tulip-left">🌷</span>
+                <span class="intro-tulip main-tulip">🌷</span>
+                <span class="intro-tulip animated-tulip-right">🌷</span>
+            </div>
+            <h1 class="intro-title">Salut Safae ✨</h1>
+            <p class="intro-subtitle">Bienvenue dans ton royaume de jeu...</p>
+            <div class="intro-glow"></div>
+        </div>
+    </div>
+
+    <!-- LE JEU PRINCIPAL -->
+    <div class="bg-glow"></div>
+
+    <div class="app-container">
+        <!-- PANNEAU DE CONTRÔLE -->
+        <div class="control-panel">
+            <div class="branding">
+                <h1>Safae's Tulip</h1>
+                <p class="subtitle">Chocolat & Pink Prémium 🌷</p>
+            </div>
+
+            <div class="status-box">
+                <div class="turn-status" id="turnIndicator">
+                    C'est à Safae de jouer 🌷
+                </div>
+                <div class="ai-status" id="aiStatus">L'IA prépare sa stratégie...</div>
+            </div>
+
+            <!-- Pièces capturées -->
+            <div class="captured-box">
+                <div class="captured-row">
+                    <span class="label">IA :</span>
+                    <div id="capturedByBlack" class="captured-pieces"></div>
+                </div>
+                <div class="captured-row">
+                    <span class="label">Safae :</span>
+                    <div id="capturedByWhite" class="captured-pieces"></div>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="resetGame()">Nouvelle Partie ✨</button>
+        </div>
+
+        <!-- ZONE DE JEU -->
+        <div class="board-wrapper">
+            <div class="letters-row"><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span></div>
+            
+            <div class="board-inner-container">
+                <div class="numbers-col"><span>8</span><span>7</span><span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span></div>
+                <div class="chessboard" id="board"></div>
+                <div class="numbers-col"><span>8</span><span>7</span><span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span></div>
+            </div>
+
+            <div class="letters-row"><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span>H</span></div>
+        </div>
+
+        <!-- PANNEAU HISTORIQUE -->
+        <div class="history-panel">
+            <h3>🌷 Chronologie Safae</h3>
+            <div class="moves-list" id="movesList"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
